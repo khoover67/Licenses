@@ -1,0 +1,16 @@
+﻿
+@{
+    ViewBag.Title = "SearchMethod";
+}
+
+<h2>Select a Table</h2>
+
+@Html.ActionLink("Show Account Table", "Index", "Account", new { auth = ViewBag.AuthCode }, new { @class = "btn btn-primary btn-lg btn-block" })
+
+@Html.ActionLink("Show Client Table", "Index", "Client", new { auth = ViewBag.AuthCode }, new { @class = "btn btn-primary btn-lg btn-block" })
+
+@Html.ActionLink("Show Product Table", "Index", "Product", new { auth = ViewBag.AuthCode }, new { @class = "btn btn-primary btn-lg btn-block" })
+
+@Html.ActionLink("Show Unit Table", "Index", "Unit", new { auth = ViewBag.AuthCode }, new { @class = "btn btn-primary btn-lg btn-block" })
+
+@Html.ActionLink("Show Update Count Table", "Index", "UpdateCount", new { auth = ViewBag.AuthCode }, new { @class = "btn btn-primary btn-lg btn-block" })

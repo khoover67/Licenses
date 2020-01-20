@@ -1,0 +1,39 @@
+﻿@model IEnumerable<Licenses.Areas.Tables.Models.AccountModel>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Accounts</h2>
+<hr />
+<p>
+    @Html.ActionLink("Create New", "Create", new { auth = ViewBag.AuthCode }, null)
+</p>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.account_number)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.account_name)
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.account_number)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.account_name)
+        </td>
+        <td>
+            @Html.ActionLink("Edit", "Edit", new { id = item.account_id, auth = ViewBag.AuthCode }) |
+            @Html.ActionLink("Details", "Details", new { id = item.account_id, auth = ViewBag.AuthCode }) |
+            @Html.ActionLink("Delete", "Delete", new { id = item.account_id, auth = ViewBag.AuthCode })
+        </td>
+    </tr>
+}
+
+</table>

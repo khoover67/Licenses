@@ -1,0 +1,57 @@
+﻿@model IEnumerable<Licenses.Areas.Updates.Models.ClientModel>
+
+@{
+    ViewBag.Title = "Latest Updates";
+}
+
+<h2>Latest Updates for Clients</h2>
+
+<hr />
+
+@foreach (var item in Model)
+{
+    <div class="row">
+        <div class="col-sm-1">
+            <a data-toggle="collapse" href="#@item.HtmlNameId" role="button" aria-expanded="false" aria-controls="@item.HtmlNameId">
+                + / -
+            </a>
+        </div>
+        <div class="col-sm-6">
+            <!-- Client name goes here -->
+            <strong>
+                @Html.DisplayFor(modelItem => item.cln_name)
+            </strong>
+        </div>
+        <div class="col-sm-2">
+            <!-- /factor/blah/factor -->
+            @Html.DisplayFor(modelItem => item.cln_db_path)
+        </div>
+        <div class="col-sm-3">
+            <!-- 10/07/2019 12:39:52 -->
+            @Html.DisplayFor(modelItem => item.LatestUpdate)
+        </div>
+    </div>
+    <div class="collapse show" id="@item.HtmlNameId">
+        <div class="row">
+            <div class="col-sm-4">
+                <!-- PADDING -->
+            </div>
+            <div class="col-sm-8">
+                <table class="table table-sm table-bordered">
+                    @foreach (var upd in item.Updates)
+                    {
+                        <tr>
+                            <td>@upd.Product.prod_name</td>
+                            <td>@Html.ActionLink($"{upd.upd_count} Units", "Index", "UpdateUnit", new { area = "Tables", id = upd.upd_id, auth = ViewBag.AuthCode }, null)</td>
+                            <td>@upd.Product.LatestUpdate.ToString()</td>
+                        </tr>
+                    }
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+<div>
+    @Html.ActionLink("Back to Search Methods", "SearchMethod", "Home", new { auth = ViewBag.AuthCode }, null)
+</div>

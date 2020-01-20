@@ -1,0 +1,45 @@
+﻿@model IEnumerable<Licenses.Areas.Tables.Models.ClientModel>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Clients</h2>
+<hr />
+<p>
+    @Html.ActionLink("Create New", "Create", new { auth = ViewBag.AuthCode })
+</p>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.cln_name)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.cln_db_path)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.AccountNumber)
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.cln_name)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.cln_db_path)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.AccountNumber)
+        </td>
+        <td>
+            @Html.ActionLink("Edit", "Edit", new { id=item.cln_id, auth = ViewBag.AuthCode }) |
+            @Html.ActionLink("Details", "Details", new { id = item.cln_id, auth = ViewBag.AuthCode }) |
+            @Html.ActionLink("Delete", "Delete", new { id = item.cln_id, auth = ViewBag.AuthCode })
+        </td>
+    </tr>
+}
+
+</table>

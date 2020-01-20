@@ -1,0 +1,68 @@
+﻿@model Licenses.Areas.Tables.Models.UpdateUnitModel
+
+@{
+    ViewBag.Title = "Edit";
+}
+
+<h2>Edit Update Unit</h2>
+
+<table class="table table-sm table-dark">
+    <tr>
+        <td style="font-weight: bold;">@Html.LabelFor(model => model.UpdateDate)</td>
+        <td>@Html.DisplayFor(model => model.UpdateDate)</td>
+    </tr>
+    <tr>
+        <td style="font-weight: bold;">@Html.LabelFor(model => model.ClientName)</td>
+        <td>@Html.DisplayFor(model => model.ClientName)</td>
+    </tr>
+    <tr>
+        <td style="font-weight: bold;">@Html.LabelFor(model => model.ProductName)</td>
+        <td>@Html.DisplayFor(model => model.ProductName)</td>
+    </tr>
+</table>
+
+<hr />
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    @Html.HiddenFor(model => model.updunit_id);
+    @Html.HiddenFor(model => model.updunit_upd_id);
+    
+    <input type="hidden" id="auth" value="@ViewBag.AuthCode" />
+
+    <div class="form-horizontal">
+
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.updunit_unit_id, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.DropDownListFor(model => model.updunit_unit_id, Model.AvailableUnits, new { @class = "form-control wideinput" })
+                @Html.ValidationMessageFor(model => model.updunit_unit_id, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.updunit_count, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.updunit_count, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.updunit_count, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input type="submit" value="Save" class="btn btn-outline-primary" />
+            </div>
+        </div>
+    </div>
+}
+
+<div>
+    @Html.ActionLink("Back to List", "Index", new { id = Model.updunit_upd_id, auth = ViewBag.AuthCode })
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

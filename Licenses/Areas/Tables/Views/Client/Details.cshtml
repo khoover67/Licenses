@@ -1,0 +1,58 @@
+﻿@model Licenses.Areas.Tables.Models.ClientModel
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<h2>Details</h2>
+<hr />
+
+<div>
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.cln_id)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.cln_id)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.cln_name)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.cln_name)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.cln_db_path)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.cln_db_path)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.cln_account_id)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.cln_account_id)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.AccountNumber)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.AccountNumber)
+        </dd>
+
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Edit", "Edit", new { id = Model.cln_id, auth = ViewBag.AuthCode }) |
+    @Html.ActionLink("Back to List", "Index", new { auth = ViewBag.AuthCode })
+</p>

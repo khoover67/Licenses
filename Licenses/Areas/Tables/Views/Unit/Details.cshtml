@@ -1,0 +1,33 @@
+﻿@model Licenses.Areas.Tables.Models.UnitModel
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<h2>Unit Details</h2>
+<hr />
+<div>
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.unit_id)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.unit_id)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.unit_name)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.unit_name)
+        </dd>
+
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Edit", "Edit", new { id = Model.unit_id }) |
+    @Html.ActionLink("Back to List", "Index")
+</p>

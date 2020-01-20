@@ -1,0 +1,52 @@
+﻿@model IEnumerable<Licenses.Areas.Updates.Models.UpdateCountModel>
+
+@{
+    ViewBag.Title = "ShowClientProduct";
+}
+
+<h2>Show Updates</h2>
+
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.upd_date)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.upd_count)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.ClientName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.ProductName)
+        </th>
+        <th></th>
+    </tr>
+
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.upd_date)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.upd_count)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ClientName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ProductName)
+            </td>
+        </tr>
+    }
+
+</table>
+
+<div>
+    @Html.ActionLink("Search for a different Client or Product", "SearchClientProduct", new { auth = ViewBag.AuthCode }, null)
+</div>
+
+<div>
+    @Html.ActionLink("Back to Search Methods", "SearchMethod", new { auth = ViewBag.AuthCode }, null)
+</div>

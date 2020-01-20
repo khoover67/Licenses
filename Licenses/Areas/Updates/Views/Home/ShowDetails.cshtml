@@ -1,0 +1,122 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Show Details</title>
+
+    <!--REMOTE-->
+    <!--jQuery dependencies-->
+    <!--<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/themes/base/jquery-ui.css" />-->
+    <!--<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>-->
+    <!--<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>-->
+
+    <!--LOCAL-->
+    <link rel="stylesheet" href="~/Content/jquery-ui/jquery-ui.min.css" />
+    <script type="text/javascript" src="~/Scripts/pqgrid/jquery.min.js"></script>
+    <script type="text/javascript" src="~/Scripts/pqgrid/jquery-ui.min.js"></script>
+    <!--Include Touch Punch file to provide support for touch devices-->
+    <!--<script type="text/javascript" src="path to touch-punch.js" ></script>-->
+    <!--ParamQuery Grid files-->
+    <link rel="stylesheet" href="~/Content/pqgrid/pqgrid.min.css" />
+    <script type="text/javascript" src="~/Scripts/pqgrid/pqgrid.min.js"></script>
+</head>
+<body>
+    <input type="hidden" id="auth" value="@ViewBag.AuthCode" />
+    <div>
+        <span style="margin-right: 10px;">Start Date:</span><input type="date" id="StartDate" value="@ViewBag.StartDate" />
+        <span style="margin-left: 20px; margin-right: 10px;">End Date:</span><input type="date" id="EndDate" value="@ViewBag.EndDate" />
+        <button type="button" id="Refresh">Refresh</button>
+    </div>
+
+    <div>
+        @Html.ActionLink("Back to Search Methods", "SearchMethod", new { auth = ViewBag.AuthCode }, null)
+    </div>
+
+    <div id="grid_array"></div>
+
+    <script>
+        function getStartDate() {
+            return $('#StartDate').val();
+        }
+
+        function getEndDate() {
+            return $('#EndDate').val();
+        }
+
+        function LoadGrid() {
+            /*
+            var data = [['2019-10-16 15:31:38', 'Foster Oil Company', 'FOSTER BLUE WATER OIL, L.L.C.', '/factor/foster/factor', 'Tom', 'ssfactor', '1'],
+            ['2019-10-16 15:31:38', 'Foster Oil Company', 'FOSTER BLUE WATER OIL, L.L.C.', '/factor/foster/factor', 'Tom', 'store 1', '2'],
+            ['2019-10-16 15:31:38', 'Foster Oil Company', 'FOSTER BLUE WATER OIL, L.L.C.', '/factor/foster/factor', 'Tom', 'truck 1', '3'],
+            ['2019-10-16 14:31:03', 'Foster Oil Company', 'FOSTER BLUE WATER OIL, L.L.C.', '/factor/foster/factor', 'DeliveryTrak', 'ssfactor', '1'],
+            ['2019-10-16 14:22:04', 'Foster Oil Company', 'FOSTER BLUE WATER OIL, L.L.C.', '/factor/foster/factor', 'FuelTrak', 'store 1', '3'],
+            ['2019-10-16 11:05:58', 'Papco Oil Company', 'PAPCO, INC', '/factor/papco/factor', 'DeliveryTrak', 'ssfactor', '5'],
+            ['2019-10-14 14:23:10', 'Foster Oil Company', 'FOSTER BLUE WATER OIL, L.L.C.', '/factor/foster/factor', 'StoreTrak', 'truck 1', '2'],
+            ['2019-10-14 13:56:32', 'Papco Oil Company', 'PAPCO, INC', '/factor/papco/factor', 'StoreTrak', 'ssfactor', '2'],
+            ['2019-10-14 13:56:32', 'Papco Oil Company', 'PAPCO, INC', '/factor/papco/factor', 'StoreTrak', 'store 1', '2'],
+            ['2019-10-14 13:56:32', 'Papco Oil Company', 'PAPCO, INC', '/factor/papco/factor', 'StoreTrak', 'truck 1', '2'],
+            ['2019-10-14 13:48:58', 'Foster Oil Company', 'FOSTER BLUE WATER OIL, L.L.C.', '/factor/foster/factor', 'DeliveryTrak', 'ssfactor', '27']];
+            */
+            var obj = {};
+            obj.minWidth = 400;
+            //obj.height = 700;
+            obj.height = 'flex';
+            obj.filterModel = { on: true, mode: "AND", header: true };
+            obj.selectionModel = { type: 'row' };
+            obj.collapsible = false;
+            obj.colModel = [
+                { title: "Date", width: 200, dataType: "string", filter: { type: 'textbox', condition: 'between', listeners: ['keyup'] } },
+                { title: "Time", width: 200, dataType: "string", filter: { type: 'textbox', condition: 'between', listeners: ['keyup'] } },
+                { title: "Account", width: 100, dataType: "string", filter: { type: 'textbox', condition: 'begin', listeners: ['keyup'] } },
+                { title: "Account Name", width: 150, dataType: "string", filter: { type: 'textbox', condition: 'begin', listeners: ['keyup'] } },
+                { title: "Client", width: 250, dataType: "string", filter: { type: 'textbox', condition: 'begin', listeners: ['keyup'] } },
+                { title: "Database", width: 150, dataType: "string", filter: { type: 'textbox', condition: 'begin', listeners: ['keyup'] } },
+                { title: "Product", width: 100, dataType: "string", filter: { type: 'textbox', condition: 'begin', listeners: ['keyup'] } },
+                { title: "Unit", width: 100, dataType: "string", filter: { type: 'textbox', condition: 'begin', listeners: ['keyup'] } },
+                { title: "Count", width: 75, dataType: "integer", align: "right", filter: { type: 'textbox', condition: 'begin', listeners: ['keyup'] } }];
+            obj.dataModel =
+                {   //data: data
+                    sorting: "local",
+                    location: "local"
+                };
+
+            //$("#grid_array").pqGrid(obj);
+
+            //load all data at once
+            var $grid = $("#grid_array").pqGrid(obj);
+            var startDate = getStartDate();
+            var endDate = getEndDate();
+
+            $grid.pqGrid("showLoading");
+            $.ajax({
+                url: "@ViewBag.AppName/api/UpdateAPI?StartDate=" + startDate + "&EndDate=" + endDate + "&auth=@Url.Encode(ViewBag.AuthCode)",
+                cache: false,
+                async: true,
+                dataType: "JSON",
+                success: function (response) {
+                    var grid = $grid.pqGrid("getInstance").grid;
+                    grid.option("dataModel.data", response.data);
+                    grid.refreshDataAndView();
+                    grid.hideLoading();
+                }
+            });
+        };
+
+        $(function () {
+            LoadGrid();
+        });
+
+        $('#Refresh').on('click', function () {
+            LoadGrid();
+        });
+    </script>
+</body>
+</html>

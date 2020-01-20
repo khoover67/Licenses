@@ -1,0 +1,33 @@
+﻿@model Licenses.Areas.Tables.Models.ProductModel
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<h2>Product Details</h2>
+<hr />
+<div>
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.prod_id)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.prod_id)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.prod_name)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.prod_name)
+        </dd>
+
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Edit", "Edit", new { id = Model.prod_id, auth = ViewBag.AuthCode }) |
+    @Html.ActionLink("Back to List", "Index", new { auth = ViewBag.AuthCode })
+</p>

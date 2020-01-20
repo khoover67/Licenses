@@ -1,0 +1,56 @@
+﻿@model Licenses.Areas.Tables.Models.UpdateCountModel
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Update Count Units</h2>
+
+<table class="table table-sm table-dark">
+    <tr>
+        <td style="font-weight: bold;">@Html.LabelFor(model => model.UpdateDate)</td>
+        <td>@Html.DisplayFor(model => model.UpdateDate)</td>
+    </tr>
+    <tr>
+        <td style="font-weight: bold;">@Html.LabelFor(model => model.ClientName)</td>
+        <td>@Html.DisplayFor(model => model.ClientName)</td>
+    </tr>
+    <tr>
+        <td style="font-weight: bold;">@Html.LabelFor(model => model.ProductName)</td>
+        <td>@Html.DisplayFor(model => model.ProductName)</td>
+    </tr>
+</table>
+
+<p>
+    @Html.ActionLink("Create New", "Create", new { id = Model.upd_id, auth = ViewBag.AuthCode })
+</p>
+
+<table class="table">
+    <tr>
+        <th>
+            Unit Name
+        </th>
+        <th>
+            Count
+        </th>
+        <th></th>
+    </tr>
+
+    @foreach (var item in Model.Units)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.UnitName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.updunit_count)
+            </td>
+            <td>
+                @Html.ActionLink("Edit", "Edit", new { id = item.updunit_id, auth = ViewBag.AuthCode }) |
+                @Html.ActionLink("Details", "Details", new { id = item.updunit_id, auth = ViewBag.AuthCode }) |
+                @Html.ActionLink("Delete", "Delete", new { id = item.updunit_id, auth = ViewBag.AuthCode })
+            </td>
+        </tr>
+    }
+
+</table>

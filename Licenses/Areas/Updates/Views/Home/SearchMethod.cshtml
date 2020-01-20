@@ -1,0 +1,13 @@
+﻿
+@{
+    ViewBag.Title = "SearchMethod";
+}
+
+<h2>Select a Search Method</h2>
+
+@Html.ActionLink("Show Latest Updates for All Clients", "Latest", new { auth = ViewBag.AuthCode }, new { @class = "btn btn-primary btn-lg btn-block" })
+
+@Html.ActionLink("Show All Updates for a Client & Product", "SearchClientProduct", new { auth = ViewBag.AuthCode }, new { @class = "btn btn-primary btn-lg btn-block" })
+
+@Html.ActionLink("Show Full Details of All Updates", "ShowDetails", new { auth = ViewBag.AuthCode }, new { @class = "btn btn-primary btn-lg btn-block" })
+

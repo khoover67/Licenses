@@ -1,0 +1,44 @@
+﻿@model Licenses.Models.SettingListModel
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<p>
+    @Html.ActionLink("Back to Clients", "Index", "Client", new { auth = Model.AuthToken }, null)
+</p>
+
+<h2>License Settings</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create", new { auth = Model.AuthToken })
+</p>
+<table class="table">
+    <tr>
+        <th>
+            Name
+        </th>
+        <th>
+            Value
+        </th>
+        <th></th>
+    </tr>
+
+    @foreach (var item in Model.Settings)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Value)
+            </td>
+            <td>
+                @Html.ActionLink("Edit", "Edit", new { id = item.Name, auth = Model.AuthToken }) |
+                @Html.ActionLink("Details", "Details", new { id = item.Name, auth = Model.AuthToken }) |
+                @Html.ActionLink("Delete", "Delete", new { id = item.Name, auth = Model.AuthToken })
+            </td>
+        </tr>
+    }
+
+</table>

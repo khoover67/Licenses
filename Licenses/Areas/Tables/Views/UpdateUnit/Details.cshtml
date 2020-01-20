@@ -1,0 +1,57 @@
+﻿@model Licenses.Areas.Tables.Models.UpdateUnitModel
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<h2>Details</h2>
+<hr />
+
+<div>
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.updunit_id)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.updunit_id)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.updunit_upd_id)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.updunit_upd_id)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.updunit_unit_id)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.updunit_unit_id)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.updunit_count)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.updunit_count)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.UnitName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.UnitName)
+        </dd>
+
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Edit", "Edit", new { id = Model.updunit_id, auth = ViewBag.AuthCode }) |
+    @Html.ActionLink("Back to List", "Index", new { id = Model.updunit_upd_id, auth = ViewBag.AuthCode })
+</p>

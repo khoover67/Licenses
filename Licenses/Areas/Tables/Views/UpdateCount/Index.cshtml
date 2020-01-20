@@ -1,0 +1,92 @@
+﻿@model Licenses.Areas.Tables.Models.UpdateCountSearchModel
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Areas/Tables/Views/Shared/_Layout2.cshtml";
+}
+
+<h2>Update Counts</h2>
+<hr />
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+    <input type="hidden" id="auth" value="@ViewBag.AuthCode" />
+
+    <div class="input-group">
+        <div class="input-group-prepend">
+            <span class="input-group-text" id="">Start Date</span>
+        </div>
+        @Html.EditorFor(model => model.StartDate, new { htmlAttributes = new { @class = "form-control" } })
+        @Html.ValidationMessageFor(model => model.StartDate, "", new { @class = "text-danger" })
+
+        <div class="input-group-prepend">
+            <span class="input-group-text" id="">End Date</span>
+        </div>
+        @Html.EditorFor(model => model.EndDate, new { htmlAttributes = new { @class = "form-control" } })
+        @Html.ValidationMessageFor(model => model.EndDate, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="input-group">
+        <div class="input-group-prepend">
+            <span class="input-group-text" id="">Client</span>
+        </div>
+        @Html.DropDownListFor(model => model.ClientId, Model.AvailableClients, new { @class = "form-control" })
+        @Html.ValidationMessageFor(model => model.ClientId, "", new { @class = "text-danger" })
+
+        <div class="input-group-prepend">
+            <span class="input-group-text" id="">Product</span>
+        </div>
+        @Html.DropDownListFor(model => model.ProductId, Model.AvailableProducts, new { @class = "form-control" })
+        @Html.ValidationMessageFor(model => model.ProductId, "", new { @class = "text-danger" })
+        <input type="submit" value="Query" class="btn btn-outline-primary" />
+    </div>
+}
+
+<table class="table">
+    <tr>
+        <th>
+            Update Date
+        </th>
+        <th>
+            Client Name
+        </th>
+        <th>
+            Product Name
+        </th>
+        <th>
+            Count
+        </th>
+        <th></th>
+    </tr>
+
+    @foreach (var item in Model.Updates)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.UpdateDate)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ClientName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ProductName)
+            </td>
+            <td>
+                @Html.ActionLink(item.upd_count.ToString(), "Index", "UpdateUnit", new { id = item.upd_id, auth = ViewBag.AuthCode }, null)
+            </td>
+            <td>
+                @Html.ActionLink("Edit", "Edit", new { id = item.upd_id, auth = ViewBag.AuthCode }) |
+                @Html.ActionLink("Details", "Details", new { id = item.upd_id, auth = ViewBag.AuthCode }) |
+                @Html.ActionLink("Delete", "Delete", new { id = item.upd_id, auth = ViewBag.AuthCode })
+            </td>
+        </tr>
+    }
+
+</table>
+
+<div>
+    @Html.ActionLink("Back to List", "Index")
+</div>
