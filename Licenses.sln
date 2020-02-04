@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Licenses.Library", "License
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Licenses.ClientSample", "Licenses.ClientSample\Licenses.ClientSample.csproj", "{C40D4AA3-55D8-4CE2-AA5C-9887D54389B2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SYLICCLN", "SYLICCLN\SYLICCLN.csproj", "{88474CD6-952D-4CAE-BA5B-146C601B9B82}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{C40D4AA3-55D8-4CE2-AA5C-9887D54389B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C40D4AA3-55D8-4CE2-AA5C-9887D54389B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C40D4AA3-55D8-4CE2-AA5C-9887D54389B2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88474CD6-952D-4CAE-BA5B-146C601B9B82}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88474CD6-952D-4CAE-BA5B-146C601B9B82}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88474CD6-952D-4CAE-BA5B-146C601B9B82}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88474CD6-952D-4CAE-BA5B-146C601B9B82}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -35,7 +41,7 @@ Global
 		SolutionGuid = {A2381FB7-2EFA-4AB2-8E3C-59EDF5A3A174}
 	EndGlobalSection
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 4
+		SccNumberOfProjects = 5
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = http://10.0.0.90:8080/factor
 		SccLocalPath0 = .
@@ -48,5 +54,8 @@ Global
 		SccProjectUniqueName3 = Licenses\\Licenses.csproj
 		SccProjectName3 = Licenses
 		SccLocalPath3 = Licenses
+		SccProjectUniqueName4 = SYLICCLN\\SYLICCLN.csproj
+		SccProjectName4 = SYLICCLN
+		SccLocalPath4 = SYLICCLN
 	EndGlobalSection
 EndGlobal
