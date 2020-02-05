@@ -1,0 +1,74 @@
+CREATE TABLE "account" (
+	"account_id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+	"account_name"	TEXT NOT NULL,
+	"account_number"	INTEGER NOT NULL UNIQUE
+);
+
+CREATE TABLE "client" (
+	"cln_id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+	"cln_name"	TEXT NOT NULL,
+	"cln_db_path"	TEXT NOT NULL,
+	"cln_account_id"	INTEGER
+);
+
+CREATE TABLE "product" (
+	"prod_id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+	"prod_name"	TEXT NOT NULL
+);
+
+CREATE TABLE "setting" (
+	"set_name"	TEXT NOT NULL UNIQUE,
+	"set_value"	TEXT NOT NULL
+);
+
+CREATE TABLE "unit" (
+	"unit_id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+	"unit_name"	TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE "update_count" (
+	"upd_id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+	"upd_date"	INTEGER NOT NULL,
+	"upd_client_id"	INTEGER NOT NULL,
+	"upd_product_id"	INTEGER NOT NULL,
+	FOREIGN KEY("upd_product_id") REFERENCES "product"("prod_id") ON DELETE CASCADE,
+	FOREIGN KEY("upd_client_id") REFERENCES "client"("cln_id") ON DELETE CASCADE
+);
+
+CREATE TABLE "update_unit" (
+	"updunit_id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+	"updunit_upd_id"	INTEGER NOT NULL,
+	"updunit_unit_id"	INTEGER NOT NULL,
+	"updunit_count"	INTEGER NOT NULL DEFAULT 0,
+	FOREIGN KEY("updunit_upd_id") REFERENCES "update_count"("upd_id") ON DELETE CASCADE,
+	FOREIGN KEY("updunit_unit_id") REFERENCES "unit"("unit_id") ON DELETE CASCADE
+);
+
+CREATE UNIQUE INDEX "idx_cln_name_db_path" ON "client" (
+	"cln_name",
+	"cln_db_path"
+);
+
+CREATE UNIQUE INDEX "idx_prod_name" ON "product" (
+	"prod_name"
+);
+
+CREATE UNIQUE INDEX "idx_unit_name" ON "unit" (
+	"unit_name"
+);
+
+CREATE INDEX "idx_update_count" ON "update_count" (
+	"upd_date",
+	"upd_client_id",
+	"upd_product_id"
+);
+
+CREATE INDEX "idx_update_count_date" ON "update_count" (
+	"upd_date"
+);
+
+CREATE INDEX "idx_update_unit" ON "update_unit" (
+	"updunit_upd_id"
+);
+
+

@@ -53,7 +53,7 @@ namespace Licenses.Controllers
 
                 using (ILicensesAccess access = Factory.GetLicensesAccess())
                 {
-                    long cnt = access.AddUpdateCount(DateTime.Now, dto.ClientName, dto.DatabasePath, dto.ProductName, units, dto.Date);
+                    long cnt = access.AddUpdateCount(dto.Date, dto.ClientName, dto.DatabasePath, dto.ProductName, units, dto.Date);
                 }
 
                 result = new ResultDTO { Message = "Success" };

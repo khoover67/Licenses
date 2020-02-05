@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Odbc;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,9 +25,11 @@ namespace SYLICCLN
             _con = new OdbcConnection(Program.Connection);
             _con.Open();
 
+            GetArchiveFolder();
             GetUserName();
             GetClientName();
-            CheckSent();
+            GetLicenseUrl();
+            GetSent();
         }
 
         public bool ExecuTrakSent { get; private set; } = false;
@@ -47,46 +50,60 @@ namespace SYLICCLN
 
         public string LicenseUrl { get; private set; } = "https://localhost:44312/api/LicenseCount";
 
+        public string WorkingFolder { get; private set; }
+
+        public string ArchiveFolder { get; private set; }
+
         public void DoUpdates()
         {
+            DateTime dtSent = DateTime.Now;
             if (!ExecuTrakSent)
             {
                 List<UpdateUnitDTO> units = GetExecuTrakUnits();
-                UpdateCountDTO dto = Licenses.Library.Client.Tools.CreateUpdateCountDTO(UserName, ClientName, _con.Database, "ExecuTrak", DateTime.Now, units);
-                //ResultDTO result = Library.Server.Tools.PostToServer(dto, url, false);
+                UpdateCountDTO dto = Licenses.Library.Client.Tools.CreateUpdateCountDTO(UserName, ClientName, _con.Database, "ExecuTrak", dtSent, units);
+                ResultDTO result = Licenses.Library.Server.Tools.PostToServer(dto, LicenseUrl, false);
+                SetSent(EXECUTRAK, dtSent);
             }
 
             if (!FuelTrakSent)
             {
                 List<UpdateUnitDTO> units = GetFuelTrakUnits();
-                UpdateCountDTO dto = Licenses.Library.Client.Tools.CreateUpdateCountDTO(UserName, ClientName, _con.Database, "FuelTrak", DateTime.Now, units);
+                UpdateCountDTO dto = Licenses.Library.Client.Tools.CreateUpdateCountDTO(UserName, ClientName, _con.Database, "FuelTrak", dtSent, units);
+                ResultDTO result = Licenses.Library.Server.Tools.PostToServer(dto, LicenseUrl, false);
+                SetSent(FUELTRAK, dtSent);
             }
 
             if (!DeliveryTrakSent)
             {
                 List<UpdateUnitDTO> units = GetDeliveryTrakUnits();
-                UpdateCountDTO dto = Licenses.Library.Client.Tools.CreateUpdateCountDTO(UserName, ClientName, _con.Database, "DeliveryTrak", DateTime.Now, units);
+                UpdateCountDTO dto = Licenses.Library.Client.Tools.CreateUpdateCountDTO(UserName, ClientName, _con.Database, "DeliveryTrak", dtSent, units);
+                ResultDTO result = Licenses.Library.Server.Tools.PostToServer(dto, LicenseUrl, false);
+                SetSent(DELIVERYTRAK, dtSent);
             }
 
             if (!StoreTrakSent)
             {
                 List<UpdateUnitDTO> units = GetStoreTrakUnits();
-                UpdateCountDTO dto = Licenses.Library.Client.Tools.CreateUpdateCountDTO(UserName, ClientName, _con.Database, "StoreTrak", DateTime.Now, units);
+                UpdateCountDTO dto = Licenses.Library.Client.Tools.CreateUpdateCountDTO(UserName, ClientName, _con.Database, "StoreTrak", dtSent, units);
+                ResultDTO result = Licenses.Library.Server.Tools.PostToServer(dto, LicenseUrl, false);
+                SetSent(STORETRAK, dtSent);
             }
 
             if (!DealerTrakSent)
             {
                 List<UpdateUnitDTO> units = GetDealerTrakUnits();
-                UpdateCountDTO dto = Licenses.Library.Client.Tools.CreateUpdateCountDTO(UserName, ClientName, _con.Database, "DealerTrak", DateTime.Now, units);
+                UpdateCountDTO dto = Licenses.Library.Client.Tools.CreateUpdateCountDTO(UserName, ClientName, _con.Database, "DealerTrak", dtSent, units);
+                ResultDTO result = Licenses.Library.Server.Tools.PostToServer(dto, LicenseUrl, false);
+                SetSent(DEALERTRAK, dtSent);
             }
         }
 
-        void CheckSent()
+        void GetSent()
         {
             string sql = "";
             try
             {
-                string today = DateTime.Today.ToShortDateString();
+                string today = DateTime.Today.ToString("yyyy-MM-dd");
                 sql =
                     "select ini_field_name, \r\n" +
                     "       ini_value \r\n" +
@@ -100,30 +117,109 @@ namespace SYLICCLN
                         string name = rdr["ini_field_name"] is DBNull ? "" : rdr["ini_field_name"].ToString().Trim().ToUpper();
                         string date = rdr["ini_value"] is DBNull ? "" : rdr["ini_value"].ToString().Trim().ToUpper();
 
-                        DateTime dt;
-                        if (DateTime.TryParse(date, out dt))
+                        bool sent = date == today;
+                        if (sent)
                         {
-                            bool sent = dt.ToShortDateString() == today;
-                            if (sent)
+                            switch (name)
                             {
-                                switch (name)
-                                {
-                                    case EXECUTRAK: ExecuTrakSent = true; break;
-                                    case DEALERTRAK: DealerTrakSent = true; break;
-                                    case DELIVERYTRAK: ExecuTrakSent = true; break;
-                                    case FUELTRAK: FuelTrakSent = true; break;
-                                    case STORETRAK: StoreTrakSent = true; break;
-                                }
+                                case EXECUTRAK: ExecuTrakSent = true; break;
+                                case DEALERTRAK: DealerTrakSent = true; break;
+                                case DELIVERYTRAK: DeliveryTrakSent = true; break;
+                                case FUELTRAK: FuelTrakSent = true; break;
+                                case STORETRAK: StoreTrakSent = true; break;
                             }
                         }
                     }
                 }
 
-                AllSent = ExecuTrakSent && DealerTrakSent && ExecuTrakSent && FuelTrakSent && StoreTrakSent;
+                AllSent = ExecuTrakSent && DealerTrakSent && DeliveryTrakSent && FuelTrakSent && StoreTrakSent;
             }
             catch (Exception ex)
             {
                 throw new ApplicationException("CheckSent error: " + ex.Message + "\r\n" + sql, ex);
+            }
+        }
+
+        void SetSent(string product, DateTime dtSent)
+        {
+            string sql = "";
+            try
+            {
+                switch (product)
+                {
+                    case EXECUTRAK: break;
+                    case DEALERTRAK: break;
+                    case DELIVERYTRAK: break;
+                    case FUELTRAK: break;
+                    case STORETRAK: break;
+                    default: return;
+                }
+
+                product = product.Replace("'", "''");
+
+                sql =
+                    "select max(ini_value) latest, count(*) cnt \r\n" +
+                    "  from sys_ini \r\n" +
+                    " where ini_file_name = 'SYLICCLN' \r\n" +
+                    "   and ini_section = 'UPDATE' \r\n" +
+                   $"   and ini_field_name = '{product}'";
+                using (var rdr = ExecuteReader(sql))
+                {
+                    if (rdr.Read())
+                    {
+                        string tmp = rdr["cnt"] is DBNull ? "0" : rdr["cnt"].ToString();
+                        int cnt;
+                        if (!int.TryParse(tmp, out cnt))
+                            cnt = 0;
+
+                        if (cnt > 0)
+                        {
+                            DateTime dtLatest;
+                            tmp = rdr["latest"] is DBNull ? "" : rdr["latest"].ToString().Trim();
+                            if (!DateTime.TryParseExact(tmp, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out dtLatest))
+                                dtLatest = DateTime.MinValue;
+
+                            if (dtSent > dtLatest)
+                            {
+                                tmp = dtSent.ToString("yyyy-MM-dd");
+                                sql =
+                                    "update sys_ini \r\n" +
+                                   $"   set ini_value = '{tmp}', \r\n" +
+                                   $"       ini_user_id = '{UserName.Replace("'", "''")}' \r\n" +
+                                    " where ini_file_name = 'SYLICCLN' \r\n" +
+                                    "   and ini_section = 'UPDATE' \r\n" +
+                                   $"   and ini_field_name = '{product}'";
+                                ExecuteNonQuery(sql);
+                            }
+                        }
+                        else
+                        {
+                            tmp = dtSent.ToString("yyyy-MM-dd");
+                            sql =
+                                "insert into sys_ini \r\n" +
+                                "( \r\n" +
+                                "  ini_file_name, \r\n" +
+                                "  ini_user_id, \r\n" +
+                                "  ini_section, \r\n" +
+                                "  ini_field_name, \r\n" +
+                                "  ini_value \r\n" +
+                                ") \r\n" +
+                                "values \r\n" +
+                                "( \r\n" +
+                                "  'SYLICCLN', \r\n" +
+                               $"  '{UserName ?? ""}', \r\n" +
+                                "  'UPDATE', \r\n" +
+                               $"  '{product}', \r\n" +
+                               $"  '{tmp}' \r\n" +
+                                ") \r\n";
+                            ExecuteNonQuery(sql);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException("SetSent error: " + ex.Message + "\r\n" + sql, ex);
             }
         }
 
@@ -183,7 +279,23 @@ namespace SYLICCLN
             string sql = "";
             try
             {
-
+                sql =
+                    "select ini_value \r\n" +
+                    "  from sys_ini \r\n" +
+                    " where ini_file_name = 'SYLICCLN' \r\n" +
+                    "   and ini_section = 'WebService' \r\n";
+                using (var rdr = ExecuteReader(sql))
+                {
+                    if (rdr.Read())
+                    {
+                        string tmp = rdr["ini_value"] is DBNull ? "" : rdr["ini_value"].ToString().Trim();
+                        if (!string.IsNullOrWhiteSpace(tmp))
+                        {
+                            LicenseUrl = tmp;
+                            return;
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -282,7 +394,7 @@ namespace SYLICCLN
                     while (rdr.Read())
                     {
                         string name = rdr["ini_field_name"] is DBNull ? "<blank>" : rdr["ini_field_name"].ToString().Trim();
-                        result.Add(new UpdateUnitDTO { UnitName = "User " + name, UnitCount = 1 });
+                        result.Add(new UpdateUnitDTO { UnitName = "User: " + name, UnitCount = 1 });
                     }
                 }
 
@@ -315,7 +427,7 @@ namespace SYLICCLN
                     while (rdr.Read())
                     {
                         string name = rdr["sct_truck"] is DBNull ? "<blank>" : rdr["sct_truck"].ToString().Trim();
-                        result.Add(new UpdateUnitDTO { UnitName = "Truck " + name, UnitCount = 1 });
+                        result.Add(new UpdateUnitDTO { UnitName = "Truck: " + name, UnitCount = 1 });
                     }
                 }
 
@@ -342,13 +454,13 @@ namespace SYLICCLN
                     "select distinct fddm_truck \r\n" +
                     "  from fd_dispatch_mtr \r\n" +
                    $" where fddm_dispatch_dt between '{dtFrom}' and '{dtTo}' \r\n" +
-                    " prder by 1";
+                    " order by 1";
                 using (var rdr = ExecuteReader(sql))
                 {
                     while (rdr.Read())
                     {
                         int truck = rdr["sct_truck"] is DBNull ? -1 : (int)rdr["sct_truck"];
-                        result.Add(new UpdateUnitDTO { UnitName = "Truck " + truck.ToString(), UnitCount = 1 });
+                        result.Add(new UpdateUnitDTO { UnitName = "Truck: " + truck.ToString(), UnitCount = 1 });
                     }
                 }
 
@@ -381,6 +493,134 @@ namespace SYLICCLN
                 result.Add(new UpdateUnitDTO { UnitName = "Stores", UnitCount = 0 });
 
             return result;
+        }
+
+        void GetArchiveFolder()
+        {
+            try
+            {
+                string wrkFolder = GetWorkingFolder();
+                string dbName = GetDatabaseName();
+                if (!string.IsNullOrWhiteSpace(wrkFolder) && !string.IsNullOrWhiteSpace(dbName))
+                {
+                    string folder = System.IO.Path.Combine(wrkFolder, dbName, "SYLICCLN");
+                    if (!System.IO.Directory.Exists(folder))
+                        System.IO.Directory.CreateDirectory(folder);
+                    ArchiveFolder = folder;
+                }
+            }
+            catch (Exception ex)
+            {
+                Tools.Logger.Entry(new ApplicationException($"Error in GetArchiveFolder: {ex.Message}", ex));
+                ArchiveFolder = "";
+            }
+        }
+
+        string GetWorkingFolder()
+        {
+            // HOSTED?
+            string folder = GetHostedWorkingFolder();
+            if (string.IsNullOrWhiteSpace(folder))
+            {
+                try
+                {
+                    // NON HOSTED
+                    string codeBase = System.Reflection.Assembly.GetExecutingAssembly().CodeBase;
+                    UriBuilder uri = new UriBuilder(codeBase);
+                    string appPath = Uri.UnescapeDataString(uri.Path);
+                    appPath = System.IO.Path.GetDirectoryName(appPath);
+
+                    int idx = appPath.IndexOf(@"\EXECTRAK\");
+                    folder = idx > 0 ? appPath.Substring(0, idx + "\\EXECTRAK".Length) : appPath.TrimEnd(" \\".ToCharArray()) + "\\EXECTRAK";
+                    folder = folder.TrimEnd(" \\".ToCharArray());
+                    if (!System.IO.Directory.Exists(folder))
+                        System.IO.Directory.CreateDirectory(folder);
+                }
+                catch (Exception ex)
+                {
+                    Tools.Logger.Entry(new ApplicationException($"Error in GetWorkingFolder: {ex.Message}", ex));
+                    folder = "";
+                }
+            }
+
+            return folder;
+        }
+
+        string GetHostedWorkingFolder()
+        {
+            string folder = "";
+            string sql = "";
+            try
+            {
+                string parm15 = "N";
+                sql =
+                    "select parm_field \r\n" +
+                    "  from sys_parm \r\n" +
+                    " where parm_nbr = 15 \r\n";
+                using (var rdr = ExecuteReader(sql))
+                {
+                    if (rdr.Read())
+                    {
+                        parm15 = rdr["parm_field"] is DBNull ? "" : rdr["parm_field"].ToString().Trim().ToUpper();
+                    }
+                }
+
+                if (parm15 != "Y")
+                    return folder;
+
+                string wrkDir = "";
+                sql =
+                    "select ini_value \r\n" +
+                    "  from sys_ini \r\n" +
+                    " where ini_file_name = 'HOSTED' \r\n" +
+                    "   and ini_section = 'WorkingDirectory' \r\n";
+                using (var rdr = ExecuteReader(sql))
+                {
+                    if (rdr.Read())
+                    {
+                        wrkDir = rdr["ini_value"] is DBNull ? "" : rdr["ini_value"].ToString().Trim().ToUpper();
+                    }
+                }
+
+                if (System.IO.Directory.Exists(wrkDir))
+                    folder = wrkDir;
+            }
+            catch (Exception ex)
+            {
+                Tools.Logger.Entry(new ApplicationException($"Error in GetHostedWorkingFolder: {ex.Message} \r\n{sql}", ex));
+                folder = "";
+            }
+
+            return folder;
+        }
+
+        string GetDatabaseName()
+        {
+            string name = "";
+            try
+            {
+                name = _con.Database.Trim().ToUpper();
+                if (name.EndsWith("/FACTOR"))
+                    name = name.Substring(0, name.Length - "/FACTOR".Length);
+                if (name.Contains("/"))
+                {
+                    string[] parts = name.Split('/');
+                    for(int i = parts.Length - 1; i >= 0; i--)
+                    {
+                        if (!string.IsNullOrWhiteSpace(parts[i]))
+                        {
+                            name = parts[i];
+                            break;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Tools.Logger.Entry(new ApplicationException($"Error in GetDatabaseName: {ex.Message}", ex));
+            }
+
+            return name;
         }
 
         #region DataAccess

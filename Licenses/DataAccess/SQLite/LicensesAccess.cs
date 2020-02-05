@@ -60,7 +60,7 @@ namespace Licenses.DataAccess.SQLite
             return AddUpdateCount(date, clientId, productId, units_ids);
         }
 
-        public bool CountExistsForDay(long client, long productName, DateTime dtLocal)
+        public bool CountExistsForDay(long clientId, long productId, DateTime dtLocal)
         {
             long from = DateToLong(DateTime.Parse($"{dtLocal.Month}/{dtLocal.Day}/{dtLocal.Year} 00:00:00"));
             long to = DateToLong(DateTime.Parse($"{dtLocal.Month}/{dtLocal.Day}/{dtLocal.Year} 11:59:50"));
@@ -68,7 +68,9 @@ namespace Licenses.DataAccess.SQLite
             string sql =
                 "select count(*) cnt \r\n" +
                 "  from update_count \r\n" +
-               $" where upd_date >= {from} \r\n" +
+               $" where upd_client_id = {clientId} \r\n" +
+               $"   and upd_product_id = {productId} \r\n" +
+               $"   and upd_date >= {from} \r\n" +
                $"   and upd_date <= {to} \r\n";
             using (SQLiteCommand cmd = new SQLiteCommand(sql, _access))
             {
