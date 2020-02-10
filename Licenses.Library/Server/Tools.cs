@@ -109,71 +109,12 @@ namespace Licenses.Library.Server
             return false;
         }
 
-        //public static ResultDTO PostToServer(UpdateCountDTO client, string url, bool filterByInterval = true)
-        //{
-        //    if (client is null)
-        //        throw new ArgumentNullException("client passed to PostToServer is empty (2)");
-        //    if (client.Client is null)
-        //        throw new ArgumentNullException("client passed to PostToServer with empty model");
-        //    if (string.IsNullOrWhiteSpace(url))
-        //        throw new ArgumentNullException("url passed to PostToServer is empty (2)");
+        public static string JasonSerialize(UpdateCountDTO dto)
+        {
+            if (dto == null)
+                throw new ArgumentNullException("Empty dto passed to JasonSerialize");
 
-        //    if (filterByInterval)
-        //    {
-        //        if (!FilterProductsByInterval(client.Client, url))
-        //        {
-        //            System.Diagnostics.Debug.Print("Skipped update");
-        //            return new ResultDTO { Message = ResultDTO.INTERVAL };
-        //        }
-        //    }
-
-        //    string jsonRequest = JsonConvert.SerializeObject(client);
-        //    return PostInfoToServer(jsonRequest, url);
-        //}
-
-        //public static bool FilterProductsByInterval(ClientModel model, string url)
-        //{
-        //    if (model == null || model.Products == null || model.Products.Count < 1)
-        //        return false;
-
-        //    using (var client = new HttpClient())
-        //    {
-        //        // Ignore unauthorized certificate certificate. Make this appSetting?
-        //        System.Net.ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
-
-        //        // Increase timeout for server response
-        //        TimeSpan timeout = new TimeSpan(0, 30, 0);
-        //        client.Timeout = timeout;
-        //        List<ProductModel> newProds = new List<ProductModel>();
-
-        //        foreach (var product in model.Products)
-        //        {
-        //            string serverResponse = "";
-
-        //            // Query string
-        //            string query = "?client=" + WebUtility.UrlEncode(model.Name ?? "x") + "&database=" + WebUtility.UrlEncode(model.DatabasePath ?? "x") + "&product=" + WebUtility.UrlEncode(product.Name ?? "x");
-        //            string cmd = url + query;
-
-        //            Task<HttpResponseMessage> task1 = client.GetAsync(cmd);
-
-        //            // Get server response
-        //            task1.Wait();
-        //            HttpResponseMessage response = task1.Result;
-
-        //            // Get string content of response
-        //            Task<string> task2 = response.Content.ReadAsStringAsync();
-        //            task2.Wait();
-        //            serverResponse = task2.Result ?? "";
-
-        //            if (serverResponse != "\"False\"")
-        //                newProds.Add(product);
-        //        }
-
-        //        if (newProds.Count != model.Products.Count)
-        //            model.Products = newProds;
-        //    }
-
-        //    return model.Products.Count > 0;
-        //}
+            return JsonConvert.SerializeObject(dto);
+        }
     }
 }

@@ -7,16 +7,28 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace SYLICCLN
 {
     class License : IDisposable
     {
-        public const string EXECUTRAK = "EXECUTRAK";
-        public const string DEALERTRAK = "DEALERTRAK";
-        public const string DELIVERYTRAK = "DELIVERYTRAK";
-        public const string FUELTRAK = "FUELTRAK";
-        public const string STORETRAK = "STORETRAK";
+        //public const string EXECUTRAK = "EXECUTRAK";
+        //public const string DEALERTRAK = "DEALERTRAK";
+        //public const string DELIVERYTRAK = "DELIVERYTRAK";
+        //public const string FUELTRAK = "FUELTRAK";
+        //public const string STORETRAK = "STORETRAK";
+
+        XmlSerializer _xmlSerializer;
+
+        public enum Products
+        {
+            DealerTrak,
+            DeliveryTrak,
+            ExecuTrak,
+            FuelTrak,
+            StoreTrak
+        }
 
         OdbcConnection _con = null;
 
@@ -57,45 +69,176 @@ namespace SYLICCLN
         public void DoUpdates()
         {
             DateTime dtSent = DateTime.Now;
-            if (!ExecuTrakSent)
+            foreach(Products product in (Products[])Enum.GetValues(typeof(Products)))
             {
-                List<UpdateUnitDTO> units = GetExecuTrakUnits();
-                UpdateCountDTO dto = Licenses.Library.Client.Tools.CreateUpdateCountDTO(UserName, ClientName, _con.Database, "ExecuTrak", dtSent, units);
-                ResultDTO result = Licenses.Library.Server.Tools.PostToServer(dto, LicenseUrl, false);
-                SetSent(EXECUTRAK, dtSent);
+                if (!ProductWasSentToday(product))
+                {
+                    List<UpdateUnitDTO> units = GetProductUnits(product);
+                    string name = Enum.GetName(typeof(Products), product);
+                    UpdateCountDTO dto = Licenses.Library.Client.Tools.CreateUpdateCountDTO(UserName, ClientName, _con.Database, name, dtSent, units);
+                    ResultDTO result = SendUpdate(dto, product, dtSent);
+                }
             }
 
-            if (!FuelTrakSent)
+            SendSavedCounts();
+        }
+
+        bool ProductWasSentToday(Products product)
+        {
+            switch (product)
             {
-                List<UpdateUnitDTO> units = GetFuelTrakUnits();
-                UpdateCountDTO dto = Licenses.Library.Client.Tools.CreateUpdateCountDTO(UserName, ClientName, _con.Database, "FuelTrak", dtSent, units);
-                ResultDTO result = Licenses.Library.Server.Tools.PostToServer(dto, LicenseUrl, false);
-                SetSent(FUELTRAK, dtSent);
+                case Products.DealerTrak:
+                    return DealerTrakSent;
+                case Products.DeliveryTrak:
+                    return DeliveryTrakSent;
+                case Products.ExecuTrak:
+                    return ExecuTrakSent;
+                case Products.FuelTrak:
+                    return FuelTrakSent;
+                case Products.StoreTrak:
+                    return StoreTrakSent;
             }
 
-            if (!DeliveryTrakSent)
+            return true; // Unknown product, don't send it!
+        }
+
+        List<UpdateUnitDTO> GetProductUnits(Products product)
+        {
+            List<UpdateUnitDTO> units;
+            switch (product)
             {
-                List<UpdateUnitDTO> units = GetDeliveryTrakUnits();
-                UpdateCountDTO dto = Licenses.Library.Client.Tools.CreateUpdateCountDTO(UserName, ClientName, _con.Database, "DeliveryTrak", dtSent, units);
-                ResultDTO result = Licenses.Library.Server.Tools.PostToServer(dto, LicenseUrl, false);
-                SetSent(DELIVERYTRAK, dtSent);
+                case Products.DealerTrak:
+                    units = GetDealerTrakUnits();
+                    break;
+                case Products.DeliveryTrak:
+                    units = GetDeliveryTrakUnits();
+                    break;
+                case Products.ExecuTrak:
+                    units = GetExecuTrakUnits();
+                    break;
+                case Products.FuelTrak:
+                    units = GetFuelTrakUnits();
+                    break;
+                case Products.StoreTrak:
+                    units = GetStoreTrakUnits();
+                    break;
+                default:
+                    units = new List<UpdateUnitDTO>();
+                    break;
             }
 
-            if (!StoreTrakSent)
+            return units;
+        }
+
+        ResultDTO SendUpdate(UpdateCountDTO dto, Products product, DateTime dtSent, bool archiveOnFail = true)
+        {
+            ResultDTO result;
+            try
             {
-                List<UpdateUnitDTO> units = GetStoreTrakUnits();
-                UpdateCountDTO dto = Licenses.Library.Client.Tools.CreateUpdateCountDTO(UserName, ClientName, _con.Database, "StoreTrak", dtSent, units);
-                ResultDTO result = Licenses.Library.Server.Tools.PostToServer(dto, LicenseUrl, false);
-                SetSent(STORETRAK, dtSent);
+                result = Licenses.Library.Server.Tools.PostToServer(dto, LicenseUrl, false);
+                SetSent(product, dtSent);
+            }
+            catch (Exception ex)
+            {
+                Tools.Logger.Entry(new ApplicationException($"Failed to Send count info to '{LicenseUrl}': \r\n{ex.Message}", ex));
+                if (archiveOnFail)
+                    SaveCountToArchiveFile(dto, product);
+                result = new ResultDTO { ErrorMessage = ex.Message, ErrorStack = ex.ToString() };
             }
 
-            if (!DealerTrakSent)
+            return result;
+        }
+
+        public void SaveCountToArchiveFile(UpdateCountDTO dto, Products product)
+        {
+            if (dto == null)
+                throw new ArgumentNullException("Empty dto passed to SaveRquestToArchiveFile");
+
+            string file = "";
+            try
             {
-                List<UpdateUnitDTO> units = GetDealerTrakUnits();
-                UpdateCountDTO dto = Licenses.Library.Client.Tools.CreateUpdateCountDTO(UserName, ClientName, _con.Database, "DealerTrak", dtSent, units);
-                ResultDTO result = Licenses.Library.Server.Tools.PostToServer(dto, LicenseUrl, false);
-                SetSent(DEALERTRAK, dtSent);
+                string name = Enum.GetName(typeof(Products), product);
+
+                if (string.IsNullOrWhiteSpace(ArchiveFolder)
+                    || !System.IO.Directory.Exists(ArchiveFolder))
+                    return;
+
+                file = System.IO.Path.Combine(ArchiveFolder,
+                    name + "_" + DateTime.Today.ToString("yyyy-MM-dd") + ".xml");
+
+                if (System.IO.File.Exists(file))
+                    return;
+
+                if (_xmlSerializer == null)
+                    _xmlSerializer = new XmlSerializer(typeof(UpdateCountDTO));
+
+                using (System.IO.TextWriter wtr = new System.IO.StreamWriter(file))
+                {
+                    _xmlSerializer.Serialize(wtr, dto);
+                }
             }
+            catch (Exception ex)
+            {
+                Tools.Logger.Entry(new ApplicationException($"Failed to archive count info to file {file}: \r\n{ex.Message}", ex));
+            }
+        }
+
+        public int SendSavedCounts()
+        {
+            int cnt = 0;
+
+            if (string.IsNullOrWhiteSpace(ArchiveFolder)
+                || !System.IO.Directory.Exists(ArchiveFolder))
+                return cnt;
+
+            string[] files = System.IO.Directory.GetFiles(ArchiveFolder, "*.xml");
+            if (files.Length < 1)
+                return 0;
+
+            if (_xmlSerializer == null)
+                _xmlSerializer = new XmlSerializer(typeof(UpdateCountDTO));
+
+            foreach (string file in files)
+            {
+                int uscore = file.IndexOf('_');
+                if (uscore < 1)
+                    continue;
+                string[] parts = file.Split('_');
+                if (parts.Length != 2)
+                    continue;
+                DateTime dt;
+                if (!DateTime.TryParse(parts[1], out dt))
+                    continue;
+                TimeSpan ts = DateTime.Today.Subtract(dt);
+                if (ts.Days > 30)
+                {
+                    try { System.IO.File.Delete(file); } catch { };
+                    continue;
+                }
+
+                Products product;
+                if (!Enum.TryParse(parts[0], out product))
+                    continue;
+
+                try
+                {
+                    UpdateCountDTO dto;
+                    using (System.IO.Stream rdr = new System.IO.FileStream(file, System.IO.FileMode.Open))
+                    {
+                        dto = (UpdateCountDTO)_xmlSerializer.Deserialize(rdr);
+                    }
+
+                    dto.AuthToken = Licenses.Library.Encryption.Auth.GetToken(UserName);
+                    SendUpdate(dto, product, dto.Date, false);
+                    try { System.IO.File.Delete(file); } catch { };
+                }
+                catch (Exception ex)
+                {
+                    Tools.Logger.Entry(new ApplicationException($"Failed to send archived count file {file}: \r\n{ex.Message}", ex));
+                }
+            }
+
+            return cnt;
         }
 
         void GetSent()
@@ -103,6 +246,7 @@ namespace SYLICCLN
             string sql = "";
             try
             {
+                string[] products = Enum.GetNames(typeof(Products));
                 string today = DateTime.Today.ToString("yyyy-MM-dd");
                 sql =
                     "select ini_field_name, \r\n" +
@@ -115,18 +259,21 @@ namespace SYLICCLN
                     while (rdr.Read())
                     {
                         string name = rdr["ini_field_name"] is DBNull ? "" : rdr["ini_field_name"].ToString().Trim().ToUpper();
-                        string date = rdr["ini_value"] is DBNull ? "" : rdr["ini_value"].ToString().Trim().ToUpper();
-
-                        bool sent = date == today;
-                        if (sent)
+                        string date = rdr["ini_value"] is DBNull ? "" : rdr["ini_value"].ToString().Trim();
+                        if (products.Contains(name))
                         {
-                            switch (name)
+                            Products product = (Products)Enum.Parse(typeof(Products), name);
+                            bool sent = date == today;
+                            if (sent)
                             {
-                                case EXECUTRAK: ExecuTrakSent = true; break;
-                                case DEALERTRAK: DealerTrakSent = true; break;
-                                case DELIVERYTRAK: DeliveryTrakSent = true; break;
-                                case FUELTRAK: FuelTrakSent = true; break;
-                                case STORETRAK: StoreTrakSent = true; break;
+                                switch (product)
+                                {
+                                    case Products.DealerTrak: DealerTrakSent = true; break;
+                                    case Products.DeliveryTrak: DeliveryTrakSent = true; break;
+                                    case Products.ExecuTrak: ExecuTrakSent = true; break;
+                                    case Products.FuelTrak: FuelTrakSent = true; break;
+                                    case Products.StoreTrak: StoreTrakSent = true; break;
+                                }
                             }
                         }
                     }
@@ -140,22 +287,15 @@ namespace SYLICCLN
             }
         }
 
-        void SetSent(string product, DateTime dtSent)
+        void SetSent(Products product, DateTime dtSent)
         {
             string sql = "";
             try
             {
-                switch (product)
-                {
-                    case EXECUTRAK: break;
-                    case DEALERTRAK: break;
-                    case DELIVERYTRAK: break;
-                    case FUELTRAK: break;
-                    case STORETRAK: break;
-                    default: return;
-                }
-
-                product = product.Replace("'", "''");
+                int cnt = 0;
+                DateTime dtLatest = DateTime.MinValue;
+                string name = Enum.GetName(typeof(Products), product);
+                name = name.Replace("'", "''");
 
                 sql =
                     "select max(ini_value) latest, count(*) cnt \r\n" +
@@ -168,53 +308,54 @@ namespace SYLICCLN
                     if (rdr.Read())
                     {
                         string tmp = rdr["cnt"] is DBNull ? "0" : rdr["cnt"].ToString();
-                        int cnt;
                         if (!int.TryParse(tmp, out cnt))
                             cnt = 0;
 
                         if (cnt > 0)
                         {
-                            DateTime dtLatest;
-                            tmp = rdr["latest"] is DBNull ? "" : rdr["latest"].ToString().Trim();
+                            tmp = rdr["latest"] is DBNull ? "1900-01-01" : rdr["latest"].ToString().Trim();
                             if (!DateTime.TryParseExact(tmp, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out dtLatest))
                                 dtLatest = DateTime.MinValue;
-
-                            if (dtSent > dtLatest)
-                            {
-                                tmp = dtSent.ToString("yyyy-MM-dd");
-                                sql =
-                                    "update sys_ini \r\n" +
-                                   $"   set ini_value = '{tmp}', \r\n" +
-                                   $"       ini_user_id = '{UserName.Replace("'", "''")}' \r\n" +
-                                    " where ini_file_name = 'SYLICCLN' \r\n" +
-                                    "   and ini_section = 'UPDATE' \r\n" +
-                                   $"   and ini_field_name = '{product}'";
-                                ExecuteNonQuery(sql);
-                            }
-                        }
-                        else
-                        {
-                            tmp = dtSent.ToString("yyyy-MM-dd");
-                            sql =
-                                "insert into sys_ini \r\n" +
-                                "( \r\n" +
-                                "  ini_file_name, \r\n" +
-                                "  ini_user_id, \r\n" +
-                                "  ini_section, \r\n" +
-                                "  ini_field_name, \r\n" +
-                                "  ini_value \r\n" +
-                                ") \r\n" +
-                                "values \r\n" +
-                                "( \r\n" +
-                                "  'SYLICCLN', \r\n" +
-                               $"  '{UserName ?? ""}', \r\n" +
-                                "  'UPDATE', \r\n" +
-                               $"  '{product}', \r\n" +
-                               $"  '{tmp}' \r\n" +
-                                ") \r\n";
-                            ExecuteNonQuery(sql);
                         }
                     }
+                }
+
+                if (dtSent > dtLatest)
+                {
+                    string tmp = dtSent.ToString("yyyy-MM-dd");
+                    if (cnt > 0)
+                    {
+                        sql =
+                            "update sys_ini \r\n" +
+                            $"   set ini_value = '{tmp}', \r\n" +
+                            $"       ini_user_id = '{UserName.Replace("'", "''")}' \r\n" +
+                            " where ini_file_name = 'SYLICCLN' \r\n" +
+                            "   and ini_section = 'UPDATE' \r\n" +
+                            $"   and ini_field_name = '{product}'";
+
+                    }
+                    else
+                    {
+                        sql =
+                            "insert into sys_ini \r\n" +
+                            "( \r\n" +
+                            "  ini_file_name, \r\n" +
+                            "  ini_user_id, \r\n" +
+                            "  ini_section, \r\n" +
+                            "  ini_field_name, \r\n" +
+                            "  ini_value \r\n" +
+                            ") \r\n" +
+                            "values \r\n" +
+                            "( \r\n" +
+                            "  'SYLICCLN', \r\n" +
+                            $"  '{UserName ?? ""}', \r\n" +
+                            "  'UPDATE', \r\n" +
+                            $"  '{product}', \r\n" +
+                            $"  '{tmp}' \r\n" +
+                            ") \r\n";
+                    }
+
+                    ExecuteNonQuery(sql);
                 }
             }
             catch (Exception ex)
@@ -317,7 +458,7 @@ namespace SYLICCLN
                     "select ini_value \r\n" +
                     "  from sys_ini \r\n" +
                     " where ini_file_name = 'SYLICCLN' \r\n" +
-                    "   and ini_user_id = 'EXECTRAK' \r\n" +
+                   $"   and ini_user_id = 'EXECTRAK' \r\n" +
                     "   and ini_section = 'FLAG' \r\n" +
                    $"   and ini_field_name = '{user}' \r\n";
 
@@ -503,7 +644,7 @@ namespace SYLICCLN
                 string dbName = GetDatabaseName();
                 if (!string.IsNullOrWhiteSpace(wrkFolder) && !string.IsNullOrWhiteSpace(dbName))
                 {
-                    string folder = System.IO.Path.Combine(wrkFolder, dbName, "SYLICCLN");
+                    string folder = System.IO.Path.Combine(wrkFolder, "FACTOR", dbName, "SYLICCLN");
                     if (!System.IO.Directory.Exists(folder))
                         System.IO.Directory.CreateDirectory(folder);
                     ArchiveFolder = folder;

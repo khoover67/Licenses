@@ -13,7 +13,7 @@ namespace Licenses.Library.Client
         public static UpdateCountDTO CreateUpdateCountDTO(
             string user,
             string clientName,
-            string databasePathe,
+            string databasePath,
             string productName,
             DateTime dt,
             List<UpdateUnitDTO> units,
@@ -31,7 +31,7 @@ namespace Licenses.Library.Client
             {
                 AuthToken = Encryption.Auth.GetToken(user),
                 ClientName = string.IsNullOrWhiteSpace(clientName) ? "<Empty Client Passed>" : clientName,
-                DatabasePath = databasePathe,
+                DatabasePath = databasePath,
                 ProductName = productName,
                 Units = units ?? new List<UpdateUnitDTO> { new UpdateUnitDTO { UnitCount = 0, UnitName = "<No Units Passed>" } },
                 Date = dt
